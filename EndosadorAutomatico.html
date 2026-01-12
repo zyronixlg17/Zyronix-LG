@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Zyronix-LG - Endosador Automático</title>
+    <link rel="icon" href="Icono.png" />
+    <link rel="stylesheet" href="EndosadorAutomatico.css">
+</head>
+
+<body>
+
+<h2>Sube uno o más archivos PDF para endosar</h2>
+
+<div id="Controles">
+    <label>
+        <input type="checkbox" id="selloEnvases">
+        <span></span>
+        Sello Envases Universales
+    </label>
+
+    <label>
+        <input type="checkbox" id="selloAltaCargo" checked>
+        <span></span>
+        Sello AltaCargo Manzanillo
+    </label>
+
+    <label>
+        <input type="checkbox" id="selloAltacargoVeracruz1">
+        <span></span>
+        Sello Altacargo Veracruz
+    </label>
+
+    <label>
+        <input type="checkbox" id="selloAltacargoVeronica2">
+        <span></span>
+        Sello Altacargo Verónica Altamira
+    </label>
+</div>
+
+<input type="file" id="pdfUploader" accept="application/pdf" multiple>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+<script>
+const uploader = document.getElementById("pdfUploader");
+
+const chkEnvases   = document.getElementById("selloEnvases");
+const chkAltaCargo = document.getElementById("selloAltaCargo");
+const chkVeracruz  = document.getElementById("selloAltacargoVeracruz1");
+const chkVeronica  = document.getElementById("selloAltacargoVeronica2");
+
+const terminales = [chkAltaCargo, chkVeracruz, chkVeronica];
+
+/* === SOLO UN SELLO DE TERMINAL === */
+terminales.forEach(chk => {
+    chk.addEventListener("change", () => {
+        if (chk.checked) {
+            terminales.forEach(o => {
+                if (o !== chk) o.checked = false;
+            });
+        }
+    });
+});
+
+/* === CARGA DE SELLOS === */
+async function cargarSello(pdfDoc, url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("No se pudo cargar el sello");
+    const bytes = await res.arrayBuffer();
+    return pdfDoc.embedPng(bytes);
+}
+
+uploader.addEventListener("change", async (e) => {
+
+    for (const file of e.target.files) {
+
+        const reader = new FileReader();
+
+        reader.onload = async ev => {
+            try {
+
+                /* 🔐 CARGA SIN IGNORAR ENCRIPTADO */
+                let pdfDoc;
+                try {
+                    pdfDoc = await PDFLib.PDFDocument.load(ev.target.result);
+                } catch {
+                    alert(
+                        "⚠️ DOCUMENTO PROTEGIDO\n\n" +
+                        "Este PDF está encriptado y no puede ser endosado " +
+                        "debido a restricciones de seguridad del documento."
+                    );
+                    return;
+                }
+
+                const pages = pdfDoc.getPages();
+
+                let selloEnvasesImg = null;
+                let selloTerminalImg = null;
+
+                if (chkEnvases.checked) {
+                    selloEnvasesImg = await cargarSello(pdfDoc, "selloEnvases.png");
+                }
+
+                if (chkAltaCargo.checked) {
+                    selloTerminalImg = await cargarSello(pdfDoc, "selloAltaCargo.png");
+                } else if (chkVeracruz.checked) {
+                    selloTerminalImg = await cargarSello(pdfDoc, "selloAltacargoVeracruz1.png");
+                } else if (chkVeronica.checked) {
+                    selloTerminalImg = await cargarSello(pdfDoc, "selloAltacargoVeronica2.png");
+                }
+
+                if (!selloTerminalImg) {
+                    alert("⚠️ Selecciona un sello de terminal.");
+                    return;
+                }
+
+                const W_ENVASES = 220;
+                const W_TERMINAL = 200;
+
+                pages.forEach(page => {
+                    const { width, height } = page.getSize();
+
+                    if (selloEnvasesImg) {
+                        const h = (selloEnvasesImg.height / selloEnvasesImg.width) * W_ENVASES;
+                        page.drawImage(selloEnvasesImg, {
+                            x: 10,
+                            y: height - h - 450,
+                            width: W_ENVASES,
+                            height: h
+                        });
+                    }
+
+                    const hT = (selloTerminalImg.height / selloTerminalImg.width) * W_TERMINAL;
+                    page.drawImage(selloTerminalImg, {
+                        x: width - W_TERMINAL - 10,
+                        y: height - hT - 430,
+                        width: W_TERMINAL,
+                        height: hT
+                    });
+                });
+
+                const pdfBytes = await pdfDoc.save();
+
+                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                const url = URL.createObjectURL(blob);
+
+                const link = document.createElement("a");
+                const limpio = file.name.replace(".pdf", "").replace(/[^a-zA-Z0-9]/g, "");
+                link.href = url;
+                link.download = `ENDOSADO-${limpio}.pdf`;
+                link.click();
+
+                URL.revokeObjectURL(url);
+
+            } catch (err) {
+                alert("❌ Error:\n" + err.message);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    uploader.value = "";
+});
+</script>
+
+<div class="footer">
+    Endoso automático creado por <span>Zyronix-LG</span> 🌬️🍃
+</div>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zyronix-LG</title>
+  <link rel="icon" href="Icono.png" />
+  <link rel="stylesheet" href="IndexDiseño.css" />
+</head>
+
+<body>
+
+  <header>
+    <h2 class="logo">Zyronix-LG</h2>
+
+    <nav class="Navegacion">
+      <button class="BotonLogin-popup">Iniciar Sesión</button>
+    </nav>
+  </header>
+
+  <div class="LoginEmergente">
+    <span class="CerrarIcono">
+      <ion-icon name="close"></ion-icon>
+    </span>
+
+    <div class="form-box login">
+      <h2>Iniciar Sesión</h2>
+
+      <form id="loginForm">
+        <div class="VetanaBoton">
+          <input type="email" name="email" required placeholder=" " />
+          <label>Correo electrónico</label>
+          <span class="icon">
+            <ion-icon name="mail-outline"></ion-icon>
+          </span>
+        </div>
+
+        <div class="VetanaBoton">
+          <input type="password" name="password" required placeholder=" " />
+          <label>Contraseña</label>
+          <span class="icon">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+          </span>
+        </div>
+
+        <button type="submit" class="btn">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="MensajeBienvenida">
+    Zyronix-LG le da la bienvenida
+  </div>
+
+  <script>
+    const LoginEmergente = document.querySelector('.LoginEmergente');
+    const btnPopup = document.querySelector('.BotonLogin-popup');
+    const iconClose = document.querySelector('.CerrarIcono');
+    const loginForm = document.getElementById("loginForm");
+    const mensaje = document.getElementById("MensajeBienvenida");
+
+    btnPopup.addEventListener('click', () => {
+      LoginEmergente.classList.add('active-popup');
+    });
+
+    iconClose.addEventListener('click', () => {
+      LoginEmergente.classList.remove('active-popup');
+    });
+
+    loginForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const email = loginForm.email.value.trim();
+      const password = loginForm.password.value;
+
+      if (email === "gael.lazaro@Zyronix-LG.com" && password === "Zyronix25") {
+        mensaje.style.display = "block";
+        LoginEmergente.classList.remove('active-popup');
+
+        setTimeout(() => {
+          window.location.href = "PaginaPrincipal.html";
+        }, 2000);
+      } else {
+        alert("Correo o contraseña incorrectos");
+      }
+    });
+  </script>
+
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+</body>
+</html>
